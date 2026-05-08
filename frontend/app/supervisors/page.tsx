@@ -9,20 +9,86 @@ export default async function SupervisorsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-800">Supervisor Templates</h1>
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          marginBottom: 32,
+        }}
+      >
+        <div>
+          <h1 style={{ color: "var(--text-primary)", marginBottom: 4 }}>Supervisor Templates</h1>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-tertiary)" }}>
+            {supervisors.length} {supervisors.length === 1 ? "template" : "templates"} configured
+          </p>
+        </div>
+
         <Link
           href="/supervisors/new"
-          className="bg-blue-600 text-white rounded px-4 py-2 text-sm font-semibold hover:bg-blue-700"
+          style={{
+            fontSize: "0.8rem",
+            fontWeight: 500,
+            color: "#fff",
+            background: "var(--accent)",
+            textDecoration: "none",
+            padding: "7px 16px",
+            borderRadius: "var(--radius-sm)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            letterSpacing: "0.01em",
+          }}
         >
-          + New Supervisor
+          <span style={{ fontSize: "1rem", lineHeight: 1 }}>+</span>
+          New Supervisor
         </Link>
       </div>
 
+      {/* Empty state */}
       {supervisors.length === 0 ? (
-        <p className="text-gray-500 text-sm">No supervisors yet. Create one to get started.</p>
+        <div
+          style={{
+            border: "1px dashed var(--border-strong)",
+            borderRadius: "var(--radius-lg)",
+            padding: "48px 32px",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: 8 }}>
+            No supervisor templates yet
+          </p>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-tertiary)", marginBottom: 24 }}>
+            Create a template to define how the AI monitors your orders.
+          </p>
+          <Link
+            href="/supervisors/new"
+            style={{
+              fontSize: "0.8rem",
+              fontWeight: 500,
+              color: "#fff",
+              background: "var(--accent)",
+              textDecoration: "none",
+              padding: "7px 16px",
+              borderRadius: "var(--radius-sm)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <span style={{ fontSize: "1rem", lineHeight: 1 }}>+</span>
+            Create first template
+          </Link>
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))",
+            gap: 12,
+          }}
+        >
           {supervisors.map((s) => (
             <SupervisorCard key={s.id} supervisor={s} />
           ))}

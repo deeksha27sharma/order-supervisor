@@ -11,11 +11,20 @@ import InstructionAdder from "@/components/runs/InstructionAdder";
 import RunControls from "@/components/runs/RunControls";
 import FinalSummaryPanel from "@/components/runs/FinalSummaryPanel";
 
+const TABS = [
+  { key: "timeline",     label: "Timeline"     },
+  { key: "memory",       label: "Memory"       },
+  { key: "inject",       label: "Inject Event" },
+  { key: "instructions", label: "Instructions" },
+] as const;
+
+type TabKey = typeof TABS[number]["key"];
+
 export default function RunDetailPage() {
   const { run_id } = useParams<{ run_id: string }>();
   const [run, setRun] = useState<Run | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [activeTab, setActiveTab] = useState<"timeline" | "memory" | "inject" | "instructions">("timeline");
+  const [activeTab, setActiveTab] = useState<TabKey>("timeline");
 
   const refresh = useCallback(async () => {
     const [r, a] = await Promise.all([getRun(run_id), getActivities(run_id)]);
@@ -29,83 +38,112 @@ export default function RunDetailPage() {
     return () => clearInterval(interval);
   }, [refresh]);
 
-  if (!run) return <p className="text-gray-500 text-sm">Loading...</p>;
+  if (!run) return (
+    <div style={{ padding: "60px 0", textAlign: "center" }}>
+      <div style={{
+        width: 20, height: 20, border: "2px solid var(--border-strong)",
+        borderTopColor: "var(--text-primary)", borderRadius: "50%",
+        animation: "spin 0.7s linear infinite", margin: "0 auto 12px",
+      }} />
+      <p style={{ fontSize: "0.82rem", color: "var(--text-tertiary)" }}>Loading run…</p>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 
-
-  const isEnded = ["completed", "terminated"].includes(run.status);
-
-  const tabs = [
-    { key: "timeline",     label: "Timeline" },
-    { key: "memory",       label: "Memory" },
-    { key: "inject",       label: "Inject Event" },
-    { key: "instructions", label: "Instructions" },
-  ] as const;
+  const isEnded = ["completed", "terminated", "failed"].includes(run.status);
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Order: {run.order_id}</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Run ID: {run.id}</p>
-          <div className="mt-1">
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 28 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <h1 style={{ color: "var(--text-primary)" }}>{run.order_id}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <RunStatusBadge status={run.status} />
+            <span style={{ fontSize: "0.72rem", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>
+              {run.id.slice(0, 12)}…
+            </span>
           </div>
         </div>
         <RunControls runId={run.id} status={run.status} onAction={refresh} />
       </div>
 
-      {/* Final summary if completed */}
+      {/* Final summary */}
       {run.final_summary && (
-        <div className="mb-6">
+        <div style={{ marginBottom: 24 }}>
           <FinalSummaryPanel run={run} />
         </div>
       )}
 
-      {/* Extra instructions list */}
+      {/* Active instructions */}
       {run.extra_instructions.length > 0 && (
-        <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded p-3">
-          <p className="text-xs font-semibold text-yellow-800 mb-1">Active Instructions</p>
-          <ul className="text-xs text-yellow-900 space-y-0.5">
-            {run.extra_instructions.map((i, idx) => (
-              <li key={idx}>• {i}</li>
+        <div style={{
+          marginBottom: 20, padding: "12px 16px",
+          background: "var(--status-moderate-bg)", border: "1px solid var(--status-moderate-text)",
+          borderRadius: "var(--radius-md)",
+        }}>
+          <p style={{
+            fontSize: "0.7rem", fontWeight: 500, fontFamily: "var(--font-mono)",
+            letterSpacing: "0.06em", textTransform: "uppercase",
+            color: "var(--status-moderate-text)", marginBottom: 8,
+          }}>
+            Active Instructions
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {run.extra_instructions.map((inst, idx) => (
+              <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <span style={{ color: "var(--status-moderate-text)", fontSize: "0.75rem", flexShrink: 0, marginTop: 1 }}>→</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--status-moderate-text)", lineHeight: 1.5 }}>{inst}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b mb-4">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => !isEnded || t.key !== "inject" ? setActiveTab(t.key) : undefined}
-            //visually dim the inject tab on ended runs
-            className={`px-4 py-2 text-sm font-semibold border-b-2 transition ${
-              activeTab === t.key
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            } ${isEnded && t.key === "inject" ? "opacity-40 cursor-not-allowed" : ""}`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div style={{
+        display: "flex", gap: 0, borderBottom: "1px solid var(--border)",
+        marginBottom: 24,
+      }}>
+        {TABS.map((t) => {
+          const disabled = isEnded && t.key === "inject";
+          const active = activeTab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => !disabled && setActiveTab(t.key)}
+              style={{
+                padding: "8px 16px",
+                fontSize: "0.8rem",
+                fontWeight: active ? 500 : 400,
+                fontFamily: "var(--font-sans)",
+                color: active ? "var(--text-primary)" : disabled ? "var(--text-tertiary)" : "var(--text-secondary)",
+                background: "transparent",
+                border: "none",
+                borderBottom: `2px solid ${active ? "var(--text-primary)" : "transparent"}`,
+                cursor: disabled ? "not-allowed" : "pointer",
+                opacity: disabled ? 0.4 : 1,
+                transition: "color 0.15s, border-color 0.15s",
+                marginBottom: -1,
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab content */}
       <div>
         {activeTab === "timeline" && <ActivityTimeline activities={activities} />}
-        {activeTab === "memory" && (
-          <MemorySummaryPanel
-            summary={run.memory_summary}
-            guidance={run.wakeup_guidance}
-          />
-        )}
-        {/*show disabled state instead of EventInjector on ended runs */}
+        {activeTab === "memory" && <MemorySummaryPanel summary={run.memory_summary} guidance={run.wakeup_guidance} />}
         {activeTab === "inject" && (
           isEnded ? (
-            <div className="rounded-md border border-gray-200 bg-gray-50 p-6 text-center">
-              <p className="text-sm text-gray-500">
+            <div style={{
+              padding: "40px 32px", textAlign: "center",
+              border: "1px dashed var(--border-strong)", borderRadius: "var(--radius-lg)",
+            }}>
+              <p style={{ fontSize: "0.83rem", color: "var(--text-tertiary)" }}>
                 This run has ended — events cannot be injected.
               </p>
             </div>
@@ -113,9 +151,7 @@ export default function RunDetailPage() {
             <EventInjector runId={run.id} onSent={refresh} />
           )
         )}
-        {activeTab === "instructions" && (
-          <InstructionAdder runId={run.id} onAdded={refresh} />
-        )}
+        {activeTab === "instructions" && <InstructionAdder runId={run.id} onAdded={refresh} />}
       </div>
     </div>
   );

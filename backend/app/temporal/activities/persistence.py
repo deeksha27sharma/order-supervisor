@@ -44,6 +44,7 @@ async def update_run_state(
     final_actions_taken: list | None = None,
     final_learnings: str | None = None,
     final_recommendations: str | None = None,
+    extra_instructions: list | None = None,
 ) -> None:
     """Update mutable fields on a Run row."""
     db = SessionLocal()
@@ -68,6 +69,8 @@ async def update_run_state(
             run.final_learnings = final_learnings
         if final_recommendations is not None:
             run.final_recommendations = final_recommendations
+        if extra_instructions is not None:
+            run.extra_instructions = extra_instructions
 
         if status in ("completed", "terminated", "failed"):
             run.completed_at = datetime.utcnow()

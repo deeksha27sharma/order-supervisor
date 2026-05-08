@@ -47,6 +47,7 @@ async def _update_state(run_id: str, **fields) -> None:
             fields.get("final_actions_taken"),
             fields.get("final_learnings"),
             fields.get("final_recommendations"),
+            fields.get("extra_instructions"),  # NEW
         ],
         start_to_close_timeout=ACTIVITY_TIMEOUT,
         retry_policy=ACTIVITY_RETRY,
@@ -145,6 +146,8 @@ class OrderSupervisorWorkflow:
             if self._pending_instructions:
                 self._extra_instructions.extend(self._pending_instructions)
                 self._pending_instructions.clear()
+                # NEW — persist instructions to DB so UI shows yellow panel
+                await _update_state(run_id, extra_instructions=self._extra_instructions)
 
             # Process pending events and add them to timeline BEFORE agent runs
             wake_reason = "scheduled_wakeup"

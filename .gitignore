@@ -84,3 +84,7 @@ temp/
 
 # Temporal
 .temporal/
+
+# Claude Code
+CLAUDE.md
+AGENTS.md
