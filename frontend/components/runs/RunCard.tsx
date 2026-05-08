@@ -1,9 +1,24 @@
 "use client";
 import Link from "next/link";
 import type { Run } from "@/lib/types";
+import { deleteRun } from "@/lib/api";
 import RunStatusBadge from "./RunStatusBadge";
 
-export default function RunCard({ run }: { run: Run }) {
+export default function RunCard({
+  run,
+  onDelete,
+}: {
+  run: Run;
+  onDelete: (id: string) => void;
+}) {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm(`Delete run ${run.order_id}?`)) return;
+    await deleteRun(run.id);
+    onDelete(run.id);
+  };
+
   return (
     <Link href={`/runs/${run.id}`} style={{ textDecoration: "none", display: "block" }}>
       <div
@@ -42,28 +57,41 @@ export default function RunCard({ run }: { run: Run }) {
           >
             {run.order_id}
           </span>
-          <RunStatusBadge status={run.status} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <RunStatusBadge status={run.status} />
+            <button
+              onClick={handleDelete}
+              title="Delete run"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-tertiary)",
+                fontSize: "0.85rem",
+                padding: "2px 4px",
+                borderRadius: "var(--radius-sm)",
+                lineHeight: 1,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Meta row */}
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.72rem",
-              color: "var(--text-tertiary)",
-              letterSpacing: "0.02em",
-            }}
-          >
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", color: "var(--text-tertiary)", letterSpacing: "0.02em" }}>
             {run.id.slice(0, 8)}…
           </span>
           <span style={{ fontSize: "0.72rem", color: "var(--text-tertiary)" }}>
-          {new Date(run.created_at).toLocaleString("en-US", {
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+            {new Date(run.created_at).toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </span>
         </div>
 

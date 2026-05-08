@@ -20,6 +20,8 @@ export const createSupervisor = (data: unknown) =>
     method: "POST",
     body: JSON.stringify(data),
   });
+export const deleteSupervisor = (id: string) =>
+  request<{ message: string }>(`/api/supervisors/${id}`, { method: "DELETE" });
 
 // Runs
 export const getRuns = () => request<import("./types").Run[]>("/api/runs");
@@ -29,6 +31,8 @@ export const createRun = (data: unknown) =>
     method: "POST",
     body: JSON.stringify(data),
   });
+export const deleteRun = (id: string) =>
+  request<{ message: string }>(`/api/runs/${id}`, { method: "DELETE" });
 export const getActivities = (runId: string) =>
   request<import("./types").Activity[]>(`/api/runs/${runId}/activities`);
 export const injectEvent = (runId: string, event_type: string, payload: Record<string, unknown>) =>

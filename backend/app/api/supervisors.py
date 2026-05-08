@@ -28,3 +28,12 @@ def get_one(supervisor_id: str, db: Session = Depends(get_db)):
     if not supervisor:
         raise HTTPException(status_code=404, detail="Supervisor not found")
     return supervisor
+
+@router.delete("/{supervisor_id}", status_code=200)
+def delete(supervisor_id: str, db: Session = Depends(get_db)):
+    supervisor = get_supervisor(db, supervisor_id)
+    if not supervisor:
+        raise HTTPException(status_code=404, detail="Supervisor not found")
+    db.delete(supervisor)
+    db.commit()
+    return {"message": "Supervisor deleted successfully"}

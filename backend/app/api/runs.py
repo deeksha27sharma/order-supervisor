@@ -184,3 +184,12 @@ async def terminate_run(run_id: str, db: Session = Depends(get_db)):
     db.commit()
 
     return {"status": "terminated"}
+
+@router.delete("/{run_id}", status_code=200)
+def delete_run(run_id: str, db: Session = Depends(get_db)):
+    run = get_run(db, run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+    db.delete(run)
+    db.commit()
+    return {"message": "Run deleted successfully"}

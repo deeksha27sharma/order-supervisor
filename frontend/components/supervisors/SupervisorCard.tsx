@@ -1,4 +1,6 @@
+"use client";
 import type { Supervisor } from "@/lib/types";
+import { deleteSupervisor } from "@/lib/api";
 
 const AGGRESSIVENESS_CONFIG: Record<string, { bg: string; color: string }> = {
   moderate:   { bg: "var(--status-moderate-bg)",   color: "var(--status-moderate-text)" },
@@ -6,8 +8,21 @@ const AGGRESSIVENESS_CONFIG: Record<string, { bg: string; color: string }> = {
   passive:    { bg: "var(--bg-muted)",              color: "var(--text-secondary)" },
 };
 
-export default function SupervisorCard({ supervisor }: { supervisor: Supervisor }) {
+export default function SupervisorCard({
+  supervisor,
+  onDelete,
+}: {
+  supervisor: Supervisor;
+  onDelete: (id: string) => void;
+}) {
   const agCfg = AGGRESSIVENESS_CONFIG[supervisor.wakeup_aggressiveness] ?? AGGRESSIVENESS_CONFIG.passive;
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Delete supervisor "${supervisor.name}"?`)) return;
+    await deleteSupervisor(supervisor.id);
+    onDelete(supervisor.id);
+  };
 
   return (
     <div
@@ -23,32 +38,45 @@ export default function SupervisorCard({ supervisor }: { supervisor: Supervisor 
     >
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-        <h3
-          style={{
-            fontSize: "0.95rem",
-            fontWeight: 600,
-            color: "var(--text-primary)",
-            lineHeight: 1.3,
-          }}
-        >
+        <h3 style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
           {supervisor.name}
         </h3>
-        <span
-          style={{
-            flexShrink: 0,
-            padding: "3px 8px",
-            borderRadius: "var(--radius-sm)",
-            background: agCfg.bg,
-            color: agCfg.color,
-            fontSize: "0.7rem",
-            fontWeight: 500,
-            fontFamily: "var(--font-mono)",
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-          }}
-        >
-          {supervisor.wakeup_aggressiveness}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              flexShrink: 0,
+              padding: "3px 8px",
+              borderRadius: "var(--radius-sm)",
+              background: agCfg.bg,
+              color: agCfg.color,
+              fontSize: "0.7rem",
+              fontWeight: 500,
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            {supervisor.wakeup_aggressiveness}
+          </span>
+          <button
+            onClick={handleDelete}
+            title="Delete supervisor"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--text-tertiary)",
+              fontSize: "0.85rem",
+              padding: "2px 4px",
+              borderRadius: "var(--radius-sm)",
+              lineHeight: 1,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Instruction */}
